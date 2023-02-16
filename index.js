@@ -20,24 +20,12 @@ app.use(session({
     httpOnly: true
   }
 }))
-// app.use((req, res, next) => {
-//   req.session.userId = "63ed42e00a4f4ac19440f57d"
-//   console.log(req.session.userId);
-//   next()
-// })
+
 app.use("/", users);
-
-// app.use((req, res, next) => {
-//   if (req.session.userId)
-//     return next();
-//   else
-//     return res.status(400).json({ message: "you need to connect!" });
-// });
-
 app.use("/posts", posts);
 
 app.use((req, res) => {
-  res.status(404).json("not found!")
+  res.status(404).json({message: "not found!"});
 });
 
 app.listen(3000, () => console.log("listening to 3000 ..."));

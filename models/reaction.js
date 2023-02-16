@@ -1,8 +1,7 @@
 const mongoose = require("mongoose")
 
 const reaction = new mongoose.Schema({
-  type: Array,
-  _type: String,
+  type: String,
   user: mongoose.Schema.Types.ObjectId
 });
 
