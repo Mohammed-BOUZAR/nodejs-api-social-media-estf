@@ -1,45 +1,95 @@
 const { User } = require('../models/user');
 const router = require('express').Router();
-const bcrypt = require('bcryptjs');
 
-router.post("/register", async (req, res) => {
-  let { nom, prenom, email, password } = req.body;
-  if (!nom || !prenom || !email || !password)
-    return res.json({ message: "nom, prenom, email & password are required" });
-
-  const salt = await bcrypt.genSalt(10);
-  password = await bcrypt.hash(password, salt);
-  const user = new User({ nom, prenom, email, password });
-  user.save();
-  // req.session.userId = user._id;
-  console.log(user);
-  res.status(201).json(user);
+router.get('/', async (req, res) => {
+  const currentUser = req.session.userId; // assuming the currently authenticated user is stored in req.user
+  User.find({ _id: { $ne: currentUser } }, (err, users) => {
+    if (err) {
+      console.log(err);
+      res.status(500).send({ message: 'Error retrieving users' });
+    } else {
+      res.send({ users });
+    }
+  }).select('first_name last_name email date_birth');
 });
 
-router.post("/login", async (req, res) => {
-  // const { email, password } = req.body;
-  // if (!email || !password)
-  //   return res.status(400).json({ message: "email & password are required" });
-  
-
-  // const user = await User.findOne({ email });
-  // console.log(user);
-  // if (!user)
-  //   return res.status(400).json({ message: "This user not found!" });
-
-  // const isMatch = bcrypt.compareSync(password, user.password);
-  // console.log(isMatch);
-  // if (!isMatch)
-  //   return res.status(400).json({ message: "Password is incorrect!" });
-
-  // req.session.userId = user._id;
-  req.session.userId = req.params.id;
-  res.status(200).json({ message: "Connected!" });
+router.get('/:id', async (req, res) => {
+  const userId = req.params.id; // Retrieve the user id from the request parameters
+  const currentUser = req.session.userId; // assuming the currently authenticated user is stored in req.session.userId
+  console.log(req.session.userId)
+  console.log(req.params.id)
+  if (currentUser) {
+    User.findOne({ _id: { $eq: currentUser } }, (err, user) => {
+      if (err) {
+        console.log(err);
+        res.status(500).send({ message: 'Error retrieving user' });
+      } else if (!user) {
+        res.status(404).send({ message: 'User not found' });
+      } else {
+        console.log(user);
+        res.send({ user });
+      }
+    });
+  }
+  else {
+    User.findOne({ _id: { $ne: currentUser, $eq: userId } }, (err, user) => {
+      if (err) {
+        console.log(err);
+        res.status(500).send({ message: 'Error retrieving user' });
+      } else if (!user) {
+        res.status(404).send({ message: 'User not found' });
+      } else {
+        console.log(user);
+        res.send({ user });
+      }
+    }).select('first_name last_name email date_birth');
+  }
 });
 
-router.post("/logout", (req, res) => {
-  req.session.destroy();
-  res.status(200).json({ message: "logged out !" });
+router.put('/:id', async (req, res) => {
+  const userId = req.params.id;
+  const { first_name, last_name, email, date_birth, state, cin, cne, password } = req.body;
+
+  const updates = {};
+  if (first_name) updates.first_name = first_name;
+  if (last_name) updates.last_name = last_name;
+  if (email) updates.email = email;
+  if (date_birth) updates.date_birth = date_birth;
+  if (state) updates.state = state;
+  if (cin) updates.cin = cin;
+  if (cne) updates.cne = cne;
+  if (password) updates.password = password;
+
+  User.findOneAndUpdate(
+    { _id: userId },
+    { $set: updates },
+    { new: true },
+    (err, updatedUser) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).send({ message: 'Error updating user' });
+      }
+      if (!updatedUser) {
+        return res.status(404).send({ message: 'User not found' });
+      }
+      res.send({ updatedUser });
+    }
+  );
+});
+
+router.delete('/:id', async (req, res) => {
+  const userId = req.params.id;
+
+  User.findOneAndDelete({ _id: userId }, (err, deletedUser) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).send({ message: 'Error deleting user' });
+    }
+    if (!deletedUser) {
+      return res.status(404).send({ message: 'User not found' });
+    }
+    res.send({ deletedUser });
+  });
 });
 
 module.exports = router;

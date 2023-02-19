@@ -1,8 +1,25 @@
-const mongoose = require("mongoose")
+const mongoose = require("mongoose");
+// const { User } = require("./user");
 
-const reaction = new mongoose.Schema({
+module.exports.reactionSchema = new mongoose.Schema({
   type: String,
-  user: mongoose.Schema.Types.ObjectId
+  enum: ['like', 'disLike', 'love', 'haha', 'wow', 'sad', 'angry', 'care'],
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  date_time: {
+    type: Date,
+    default: Date.now()
+  }
 });
 
-module.exports = reaction;
+module.exports.reactionSchema.post('save', function (error, doc, next) {
+  if (error.name === 'ValidationError') {
+    // Handle validation error
+    next(new Error('Invalid reaction data'));
+  } else {
+    // Pass on other errors
+    next(error);
+  }
+});

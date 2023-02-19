@@ -1,36 +1,42 @@
 const mongoose = require("mongoose");
-const { reaction } = require("./reaction");
+const { commentSchema } = require("./comment");
+const { reactionSchema } = require("./reaction");
+// const { User } = require("./user");
 
 const postSchema = new mongoose.Schema({
   content: {
     type: String
   },
-  user: mongoose.Schema.Types.ObjectId,
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
   date_time: {
     type: Date,
     default: Date.now()
   },
-  // reactions: [reaction],
-  comment: [{
-    // type: Array,
-    content: String,
-    date_time: {
-      type: Date,
-      default: Date.now()
-    },
-    user: mongoose.Schema.Types.ObjectId,
-    // reactions: [reaction],
-    sub_comment: {
-      type: Array,
-      content: String,
-      user: mongoose.Schema.Types.ObjectId,
-      date_time: {
-        type: Date,
-        default: Date.now()
-      },
-      reactions: [reaction]
-    }
-  }]
+  reactions: [reactionSchema],
+  comment: [commentSchema]
+});
+
+postSchema.post('save', function(error, doc, next) {
+  if (error.name === 'MongoError' && error.code === 11000) {
+    // Handle duplicate key error
+    next(new Error('Post already exists'));
+  } else {
+    // Pass on other errors
+    next(error);
+  }
+});
+
+postSchema.post('findOneAndUpdate', function(error, doc, next) {
+  if (error.name === 'CastError') {
+    // Handle cast error
+    next(new Error('Invalid post ID'));
+  } else {
+    // Pass on other errors
+    next(error);
+  }
 });
 
 const Post = new mongoose.model('Post', postSchema);
