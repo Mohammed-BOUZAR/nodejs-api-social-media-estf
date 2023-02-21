@@ -7,7 +7,7 @@ const { isAuth } = require('../middleware/auth');
 
 
 /**
- * Comment Route
+ * Comments
  */
 
 router.use('/:commentId/subComments', subcomments);
@@ -29,7 +29,6 @@ router.get("/:commentId", isAuth, async (req, res) => {
     return res.status(500).json({ error: "Server error" });
   }
 });
-
 
 router.post("/", isAuth, async (req, res) => {
   const { content, userId } = req.body;
@@ -71,7 +70,6 @@ router.put("/:commentId", isAuth, async (req, res) => {
   }
 });
 
-
 router.delete("/:commentId", isAuth, async (req, res) => {
   try {
     let post = await Post.findOneAndUpdate(
@@ -90,5 +88,86 @@ router.delete("/:commentId", isAuth, async (req, res) => {
     return res.status(500).json({ error: "Server error" });
   }
 });
+
+
+
+/**
+ * Reactions
+ */
+
+router.post("/:commentId/reactions", isAuth, async (req, res) => {
+  const { type } = req.body;
+  const { postId, commentId } = req.params;
+  try {
+    let post = await Post.findByIdAndUpdate(
+      {
+        _id: postId,
+        "comments._id": commentId,
+        "comments.$[comments].reactions._id": { $ne: req.userId } // Check if "id" value doesn't exist in the reactions array
+      },
+      { $push: { "comments.$[comment].reactions": { type, _id: req.userId } } },
+      { new: true, arrayFilters: [{ "comment._id": commentId }] }
+    );
+
+    if (!post) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+
+    return res.status(201).json(post);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.put("/:commentId/reactions/:reactionId", isAuth, async (req, res) => {
+  const { type } = req.body;
+  const { postId, reactionId } = req.params;
+  try {
+    let updatedComment = await Post.findByIdAndUpdate(
+      {
+        _id: postId,
+        "comments._id": commentId,
+        "comments.$[comments].reactions._id": { $eq: req.userId } // Check if "id" value doesn't exist in the reactions array
+      },
+      { $set: { "comments.$[comment].reactions.$[reaction].type": type } },
+      { new: true, arrayFilters: [{ "comment._id": commentId }, { "reaction._id": reactionId }] }
+    );
+
+    if (!updatedComment) {
+      return res.status(404).json({ error: "Comment not found" });
+    }
+
+    return res.status(200).json(updatedComment);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.delete("/:commentId/reactions/:reactionId", isAuth, async (req, res) => {
+  const { postId, reactionId } = req.params;
+  try {
+    let post = await Post.findOneAndUpdate(
+      {
+        _id: postId,
+        "comments._id": commentId,
+        "comments.$[comments].reactions._id": { $eq: req.userId } // Check if "id" value doesn't exist in the reactions array
+      },
+      { $pull: { "comments.$[comment].reactions": { _id: reactionId } } },
+      { new: true, arrayFilters: [{ "comment._id": commentId }] }
+    );
+
+    if (!post) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+
+    return res.status(200).json({ message: "Reaction deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Server error" });
+  }
+});
+
 
 module.exports = router

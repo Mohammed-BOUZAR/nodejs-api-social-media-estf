@@ -5,11 +5,12 @@ const comments = require('./comments');
 const jwt = require('jsonwebtoken');
 const { isAuth } = require('../middleware/auth');
 
-router.use('/:postId/comments', comments);
 
 /**
  * Posts
  */
+
+router.use('/:postId/comments', comments);
 
 router.get("/", isAuth, async (req, res) => {
   try {
@@ -25,7 +26,6 @@ router.get("/", isAuth, async (req, res) => {
     return res.status(500).json({ error: "Server error" });
   }
 });
-
 
 router.get('/:postId', isAuth, async (req, res) => {
   try {
@@ -43,7 +43,6 @@ router.get('/:postId', isAuth, async (req, res) => {
     return res.status(500).json({ error: 'Server error' });
   }
 });
-
 
 router.post("/", isAuth, async (req, res) => {
   const { content } = req.body;
@@ -66,8 +65,6 @@ router.post("/", isAuth, async (req, res) => {
     return res.status(500).json({ error: "Server error" });
   }
 });
-
-
 
 router.put('/:postId', isAuth, async (req, res) => {
   const { content } = req.body;
@@ -115,18 +112,16 @@ router.delete("/:postId", isAuth, async (req, res) => {
 });
 
 
-
 /**
  * Reactions
  */
-
 
 router.post("/:postId/reactions", isAuth, async (req, res) => {
   const { type } = req.body;
   const { postId } = req.params;
   try {
     let post = await Post.findByIdAndUpdate(
-      postId,
+      { _id: postId, "reactions._id": { $ne: req.userId } }, // Check if "id" value doesn't exist in the reactions array
       { $push: { 'reactions': { type, user: req.userId } } },
       { new: true }
     );
@@ -147,7 +142,7 @@ router.put("/:postId/reactions/:reactionId", isAuth, async (req, res) => {
   const { postId, reactionId } = req.params;
   try {
     let updatedComment = await Post.findOneAndUpdate(
-      { "_id": postId, "reactions._id": reactionId },
+      { _id: postId, "reactions._id": { $eq: reactionId } }, // Check if "id" value doesn't exist in the reactions array
       { $set: { "reactions.$[reactions].type": type } },
       { new: true, arrayFilters: [{ "reactions._id": reactionId }] }
     );
@@ -163,13 +158,12 @@ router.put("/:postId/reactions/:reactionId", isAuth, async (req, res) => {
   }
 });
 
-
 router.delete("/:postId/reactions/:reactionId", isAuth, async (req, res) => {
   const { postId, reactionId } = req.params;
   try {
     let post = await Post.findOneAndUpdate(
-      { "_id": postId },
-      { $pull: { "reactions": { "_id": reactionId } } },
+      { _id: postId, "reactions._id": { $eq: reactionId } },
+      { $pull: { "reactions": { _id: reactionId } } },
       { new: true }
     );
 
@@ -177,7 +171,7 @@ router.delete("/:postId/reactions/:reactionId", isAuth, async (req, res) => {
       return res.status(404).json({ error: "Post not found" });
     }
 
-    return res.status(200).json({ message: "Comment deleted successfully" });
+    return res.status(200).json({ message: "Reaction deleted successfully" });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Server error" });

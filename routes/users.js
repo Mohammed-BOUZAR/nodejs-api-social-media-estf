@@ -3,6 +3,11 @@ const router = require('express').Router();
 const jwt = require('jsonwebtoken');
 const { isAuth } = require('../middleware/auth');
 
+
+/**
+ * Users
+ */
+
 router.get('/', isAuth, async (req, res) => {
   const currentUser = req.userId;
   User.find({ _id: { $ne: currentUser } }, (err, users) => {
@@ -17,7 +22,7 @@ router.get('/', isAuth, async (req, res) => {
   }).select('first_name last_name email date_birth');
 });
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', isAuth, async (req, res) => {
   const userId = req.params.id;
   const token = req.cookies.token;
 
@@ -60,7 +65,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', isAuth, async (req, res) => {
   const userId = req.params.id;
   const { first_name, last_name, email, date_birth, state, cin, cne, password } = req.body;
 
@@ -107,7 +112,7 @@ router.put('/:id', async (req, res) => {
   );
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', isAuth, async (req, res) => {
   const userId = req.params.id;
 
   // Verify JWT token

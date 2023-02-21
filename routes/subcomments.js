@@ -6,7 +6,7 @@ const { isAuth } = require('../middleware/auth');
 
 
 /**
- * subComment Route
+ * SubComments
  */
 
 router.post("/", isAuth, async (req, res) => {
@@ -66,7 +66,6 @@ router.put("/:subCommentId", isAuth, async (req, res) => {
   }
 });
 
-
 router.delete("/:subCommentId", isAuth, async (req, res) => {
   const { postId, commentId, subCommentId } = req.params;
 
@@ -89,36 +88,95 @@ router.delete("/:subCommentId", isAuth, async (req, res) => {
   }
 });
 
+/**
+ * Reactions
+ */
 
 
-// router.post("/:id/:commentId/:k/:f/:d", isAuth, async (req, res) => {
-//   const { content } = req.body;
-//   try {
-//   let post = await Post.findByIdAndUpdate(
-//   { '_id': req.params.id },
-//   {
-//     $push: {
-//       'comment.$[comment].subComments': {
-//         content,
-//         user: req.session.userId
-//       }
-//     }
-//   }, {
-//   arrayFilters: [
-//     { 'comment._id': req.params.commentId }
-//   ],
-//   new: true
-// });
+router.post("/:subCommentId/reactions", isAuth, async (req, res) => {
+  const { type } = req.body;
+  const { postId, commentId, subCommentId } = req.params;
+  try {
+    let post = await Post.findByIdAndUpdate(
+      {
+        _id: postId,
+        "comments._id": commentId,
+        "comments.$[comments].subComments.$[subComment].reactions._id": { $ne: req.userId } // Check if "id" value doesn't exist in the reactions array
+      },
+      { $push: { "comments.$[comment].reactions": { type, _id: req.userId } } },
+      { new: true, arrayFilters: [{ "comment._id": commentId }, { "subComment._id": subCommentId }] }
+    );
 
-//   if (!post) {
-//     return res.status(404).json({ error: "Post not found" });
-//   }
+    if (!post) {
+      return res.status(404).json({ error: "Post not found" });
+    }
 
-//   return res.status(201).json(post);
-// } catch (error) {
-//   console.error(error);
-//   return res.status(500).json({ error: "Server error" });
-// }
-// });
+    return res.status(201).json(post);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.put("/:subCommentId/reactions/:reactionId", isAuth, async (req, res) => {
+  const { type } = req.body;
+  const { postId, commentId, subCommentId, reactionId } = req.params;
+  try {
+    let updatedComment = await Post.findByIdAndUpdate(
+      {
+        _id: postId,
+        "comments._id": commentId,
+        "comments.$[comments].subComments.$[subComment].reactions._id": { $eq: req.userId } // Check if "id" value doesn't exist in the reactions array
+      },
+      { $set: { "comments.$[comment].subComments.$[subComment].reactions.$[reaction].type": type } },
+      {
+        new: true,
+        arrayFilters: [
+          { "comment._id": commentId },
+          { "subComment._id": subCommentId },
+          { "reaction._id": reactionId }
+        ]
+      }
+    );
+
+    if (!updatedComment) {
+      return res.status(404).json({ error: "Comment not found" });
+    }
+
+    return res.status(200).json(updatedComment);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.delete("/:subCommentId/reactions/:reactionId", isAuth, async (req, res) => {
+  const { postId, commentId, subCommentId, reactionId } = req.params;
+  try {
+    let post = await Post.findOneAndUpdate(
+      {
+        _id: postId,
+        "comments._id": commentId,
+        "comments.$[comments].subComments.$[subComment].reactions._id": { $eq: req.userId } // Check if "id" value doesn't exist in the reactions array
+      },
+      { $pull: { "comments.$[comment].subComments.$[subComment].reactions.": { _id: reactionId } } },
+      {
+        new: true, arrayFilters: [
+          { "comment._id": commentId },
+          { "subComment._id": subCommentId }
+        ]
+      }
+    );
+
+    if (!post) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+
+    return res.status(200).json({ message: "Reaction deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Server error" });
+  }
+});
 
 module.exports = router;
