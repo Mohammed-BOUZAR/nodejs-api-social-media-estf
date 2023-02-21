@@ -1,9 +1,11 @@
 const mongoose = require('mongoose');
 const express = require('express');
-const session = require('express-session');
 const posts = require('./routes/posts');
 const auth = require('./routes/auth');
 const users = require('./routes/users');
+const cookieParser = require('cookie-parser');
+
+require('dotenv').config();
 
 mongoose.set('strictQuery', true);
 mongoose.connect('mongodb://localhost:27017/pfe')
@@ -12,14 +14,7 @@ mongoose.connect('mongodb://localhost:27017/pfe')
 
 const app = express();
 app.use(express.json());
-app.use(session({
-  secret: "key",
-  resave: false,
-  saveUninitialized: true,
-  cookie: {
-    httpOnly: true
-  }
-}))
+app.use(cookieParser())
 
 app.use("/api/auth", auth);
 app.use("/api/users", users);
