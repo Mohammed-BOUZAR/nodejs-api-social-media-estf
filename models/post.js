@@ -16,7 +16,7 @@ const postSchema = new mongoose.Schema({
     default: Date.now()
   },
   reactions: [reactionSchema],
-  comment: [commentSchema]
+  comments: [commentSchema]
 });
 
 postSchema.post('save', function(error, doc, next) {

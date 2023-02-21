@@ -2,8 +2,10 @@ const mongoose = require("mongoose");
 // const { User } = require("./user");
 
 module.exports.reactionSchema = new mongoose.Schema({
-  type: String,
-  enum: ['like', 'disLike', 'love', 'haha', 'wow', 'sad', 'angry', 'care'],
+  type: {
+    type: String,
+    enum: ['like', 'disLike', 'love', 'haha', 'wow', 'sad', 'angry', 'care']
+  },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'

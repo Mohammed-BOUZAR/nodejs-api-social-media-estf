@@ -19,7 +19,7 @@ router.get("/:commentId", isAuth, async (req, res) => {
     if (!post) {
       return res.status(404).json({ error: "Post not found" });
     }
-    const comment = post.comment.id(commentId);
+    const comment = post.comments.id(commentId);
     if (!comment) {
       return res.status(404).json({ error: "Comment not found" });
     }
@@ -36,7 +36,7 @@ router.post("/", isAuth, async (req, res) => {
   try {
     let post = await Post.findByIdAndUpdate(
       req.params.postId,
-      { $push: { 'comment': { content, user: userId } } },
+      { $push: { 'comments': { content, user: userId } } },
       { new: true }
     );
 
@@ -54,11 +54,10 @@ router.post("/", isAuth, async (req, res) => {
 router.put("/:commentId", isAuth, async (req, res) => {
   const { content } = req.body;
   try {
-    console.log("put comment")
     let updatedComment = await Post.findOneAndUpdate(
-      { "_id": req.params.postId, "comment._id": req.params.commentId },
-      { $set: { "comment.$[comment].content": content } },
-      { new: true, arrayFilters: [{ "comment._id": req.params.commentId }] }
+      { "_id": req.params.postId, "comments._id": req.params.commentId },
+      { $set: { "comments.$[comments].content": content } },
+      { new: true, arrayFilters: [{ "comments._id": req.params.commentId }] }
     );
 
     if (!updatedComment) {
@@ -75,17 +74,17 @@ router.put("/:commentId", isAuth, async (req, res) => {
 
 router.delete("/:commentId", isAuth, async (req, res) => {
   try {
-    let updatedPost = await Post.findOneAndUpdate(
+    let post = await Post.findOneAndUpdate(
       { "_id": req.params.postId },
-      { $pull: { "comment": { "_id": req.params.commentId } } },
+      { $pull: { "comments": { "_id": req.params.commentId } } },
       { new: true }
     );
 
-    if (!updatedPost) {
+    if (!post) {
       return res.status(404).json({ error: "Post not found" });
     }
 
-    return res.status(200).json(updatedPost);
+    return res.status(200).json({ message: "Comment deleted successfully" });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Server error" });

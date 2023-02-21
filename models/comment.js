@@ -18,7 +18,7 @@ module.exports.commentSchema = new mongoose.Schema({
     ref: 'User'
   },
   reactions: [reactionSchema],
-  sub_comments: [subCommentSchema]
+  subComments: [subCommentSchema]
 });
 
 module.exports.commentSchema.post('save', function (error, doc, next) {
