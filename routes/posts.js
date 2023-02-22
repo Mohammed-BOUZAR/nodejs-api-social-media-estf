@@ -3,7 +3,8 @@ const { User } = require('../models/user');
 const router = require('express').Router();
 const comments = require('./comments');
 const jwt = require('jsonwebtoken');
-const { isAuth } = require('../middleware/auth');
+const { isToken } = require('../middleware/token');
+const { isPostAuth, isReactionAuth } = require('../middleware/auth');
 
 
 /**
@@ -12,7 +13,7 @@ const { isAuth } = require('../middleware/auth');
 
 router.use('/:postId/comments', comments);
 
-router.get("/", isAuth, async (req, res) => {
+router.get("/", isToken, async (req, res) => {
   try {
     const posts = await Post.find({ user: req.userId });
 
@@ -27,7 +28,7 @@ router.get("/", isAuth, async (req, res) => {
   }
 });
 
-router.get('/:postId', isAuth, async (req, res) => {
+router.get('/:postId', isToken, async (req, res) => {
   try {
     if (!req.userId) {
       return res.status(401).send({ message: 'Authentication required' });
@@ -44,7 +45,7 @@ router.get('/:postId', isAuth, async (req, res) => {
   }
 });
 
-router.post("/", isAuth, async (req, res) => {
+router.post("/", isToken, async (req, res) => {
   const { content } = req.body;
   try {
     let post = new Post({
@@ -66,12 +67,12 @@ router.post("/", isAuth, async (req, res) => {
   }
 });
 
-router.put('/:postId', isAuth, async (req, res) => {
+router.put('/:postId', isToken, isPostAuth, async (req, res) => {
   const { content } = req.body;
   const { postId } = req.params;
   try {
     let updatedPost = await Post.findByIdAndUpdate(
-      postId,
+      { _id: postId, user: req.userId },
       { content },
       { new: true }
     );
@@ -87,12 +88,12 @@ router.put('/:postId', isAuth, async (req, res) => {
   }
 });
 
-router.delete("/:postId", isAuth, async (req, res) => {
+router.delete("/:postId", isToken, isPostAuth, async (req, res) => {
   const { postId } = req.params;
   try {
     const userId = req.userId;
 
-    const deletedPost = await Post.findByIdAndDelete(postId);
+    const deletedPost = await Post.findByIdAndDelete({ _id: postId, user: req.userId });
 
     if (!deletedPost) {
       return res.status(404).json({ error: "Post not found" });
@@ -116,12 +117,12 @@ router.delete("/:postId", isAuth, async (req, res) => {
  * Reactions
  */
 
-router.post("/:postId/reactions", isAuth, async (req, res) => {
+router.post("/:postId/reactions", isToken, isReactionAuth, async (req, res) => {
   const { type } = req.body;
   const { postId } = req.params;
   try {
     let post = await Post.findByIdAndUpdate(
-      { _id: postId, "reactions._id": { $ne: req.userId } }, // Check if "id" value doesn't exist in the reactions array
+      { _id: postId, "reactions.user": { $ne: req.userId } }, // Check if "id" value doesn't exist in the reactions array
       { $push: { 'reactions': { type, user: req.userId } } },
       { new: true }
     );
@@ -137,12 +138,12 @@ router.post("/:postId/reactions", isAuth, async (req, res) => {
   }
 });
 
-router.put("/:postId/reactions/:reactionId", isAuth, async (req, res) => {
+router.put("/:postId/reactions/:reactionId", isToken, isReactionAuth, async (req, res) => {
   const { type } = req.body;
   const { postId, reactionId } = req.params;
   try {
     let updatedComment = await Post.findOneAndUpdate(
-      { _id: postId, "reactions._id": { $eq: reactionId } }, // Check if "id" value doesn't exist in the reactions array
+      { _id: postId, "reactions.user": { $eq: req.userId } }, // Check if "id" value doesn't exist in the reactions array
       { $set: { "reactions.$[reactions].type": type } },
       { new: true, arrayFilters: [{ "reactions._id": reactionId }] }
     );
@@ -158,11 +159,11 @@ router.put("/:postId/reactions/:reactionId", isAuth, async (req, res) => {
   }
 });
 
-router.delete("/:postId/reactions/:reactionId", isAuth, async (req, res) => {
+router.delete("/:postId/reactions/:reactionId", isToken, isReactionAuth, async (req, res) => {
   const { postId, reactionId } = req.params;
   try {
     let post = await Post.findOneAndUpdate(
-      { _id: postId, "reactions._id": { $eq: reactionId } },
+      { _id: postId, "reactions.user": { $eq: req.userId } },
       { $pull: { "reactions": { _id: reactionId } } },
       { new: true }
     );

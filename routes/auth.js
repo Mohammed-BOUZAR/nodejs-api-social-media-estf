@@ -1,7 +1,7 @@
 const { User } = require('../models/user');
 const router = require('express').Router();
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken');
 
 router.post("/register", async (req, res) => {
   const { first_name, last_name, email, date_birth, state, cin, cne, password } = req.body;
@@ -11,8 +11,7 @@ router.post("/register", async (req, res) => {
         console.log(err);
         res.status(500).send({ message: 'Error adding new user' });
       } else {
-        const token = jwt.sign({ user }, process.env.JWT_SECRET_KEY, { expiresIn: '1h' });
-        res.send({ token });
+        res.send({ user });
       }
     });
 });
@@ -35,7 +34,7 @@ router.post('/login', (req, res) => {
       if (!isMatch) {
         return res.status(401).send({ message: 'Authentication failed' });
       }
-      const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_KEY, { expiresIn: '1h' });
+      const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_KEY);
       res.cookie('jwt', token, { httpOnly: true });
       res.send({ token });
     });

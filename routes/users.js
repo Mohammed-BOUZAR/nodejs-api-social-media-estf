@@ -1,14 +1,14 @@
 const { User } = require('../models/user');
 const router = require('express').Router();
 const jwt = require('jsonwebtoken');
-const { isAuth } = require('../middleware/auth');
+const { isToken } = require('../middleware/token');
 
 
 /**
  * Users
  */
 
-router.get('/', isAuth, async (req, res) => {
+router.get('/', isToken, async (req, res) => {
   const currentUser = req.userId;
   User.find({ _id: { $ne: currentUser } }, (err, users) => {
     if (err) {
@@ -17,22 +17,16 @@ router.get('/', isAuth, async (req, res) => {
     } else {
       const token = jwt.sign({ userId: currentUser }, process.env.JWT_SECRET_KEY, { expiresIn: '1h' });
       res.cookie('jwt', token, { httpOnly: true });
-      res.send({ users, token });
+      res.send({ users });
     }
   }).select('first_name last_name email date_birth');
 });
 
-router.get('/:id', isAuth, async (req, res) => {
+router.get('/:id', isToken, async (req, res) => {
   const userId = req.params.id;
-  const token = req.cookies.token;
-
-  if (!token) {
-    return res.status(401).send({ message: 'Authentication failed' });
-  }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-    const currentUser = decoded.userId;
+    const currentUser = req.userId;
 
     if (currentUser !== userId) {
       User.findOne({ _id: { $ne: currentUser, $eq: userId } }, (err, user) => {
@@ -45,7 +39,8 @@ router.get('/:id', isAuth, async (req, res) => {
           console.log(user);
           res.send({ user });
         }
-      }).select('first_name last_name email date_birth');
+      })
+      .select('first_name last_name email date_birth');
     } else {
       User.findOne({ _id: { $eq: currentUser } }, (err, user) => {
         if (err) {
@@ -65,7 +60,7 @@ router.get('/:id', isAuth, async (req, res) => {
   }
 });
 
-router.put('/:id', isAuth, async (req, res) => {
+router.put('/:id', isToken, async (req, res) => {
   const userId = req.params.id;
   const { first_name, last_name, email, date_birth, state, cin, cne, password } = req.body;
 
@@ -78,22 +73,6 @@ router.put('/:id', isAuth, async (req, res) => {
   if (cin) updates.cin = cin;
   if (cne) updates.cne = cne;
   if (password) updates.password = password;
-
-  const token = req.cookies.token;
-
-  if (!token) {
-    return res.status(401).send({ message: 'Authentication failed' });
-  }
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-    if (decoded.userId !== userId) {
-      return res.status(401).send({ message: 'Authentication failed' });
-    }
-  } catch (err) {
-    console.error(err);
-    return res.status(500).send({ message: 'Server error' });
-  }
 
   User.findOneAndUpdate(
     { _id: userId },
@@ -112,7 +91,7 @@ router.put('/:id', isAuth, async (req, res) => {
   );
 });
 
-router.delete('/:id', isAuth, async (req, res) => {
+router.delete('/:id', isToken, async (req, res) => {
   const userId = req.params.id;
 
   // Verify JWT token

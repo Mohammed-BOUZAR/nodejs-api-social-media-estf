@@ -3,7 +3,8 @@ const { User } = require('../models/user');
 const router = require('express').Router({ mergeParams: true });
 const subcomments = require('./subcomments')
 const jwt = require('jsonwebtoken');
-const { isAuth } = require('../middleware/auth');
+const { isToken } = require('../middleware/token');
+const { isCommentAuth, isCommentReactionAuth } = require('../middleware/auth');
 
 
 /**
@@ -12,7 +13,7 @@ const { isAuth } = require('../middleware/auth');
 
 router.use('/:commentId/subComments', subcomments);
 
-router.get("/:commentId", isAuth, async (req, res) => {
+router.get("/:commentId", isToken, async (req, res) => {
   const { postId, commentId } = req.params;
   try {
     const post = await Post.findOne({ _id: postId });
@@ -30,11 +31,12 @@ router.get("/:commentId", isAuth, async (req, res) => {
   }
 });
 
-router.post("/", isAuth, async (req, res) => {
+router.post("/", isToken, async (req, res) => {
   const { content, userId } = req.body;
+  const { postId } = req.params;
   try {
     let post = await Post.findByIdAndUpdate(
-      req.params.postId,
+      postId,
       { $push: { 'comments': { content, user: userId } } },
       { new: true }
     );
@@ -50,13 +52,17 @@ router.post("/", isAuth, async (req, res) => {
   }
 });
 
-router.put("/:commentId", isAuth, async (req, res) => {
+router.put("/:commentId", isToken, isCommentAuth, async (req, res) => {
   const { content } = req.body;
+  const { postId, commentId } = req.params;
   try {
     let updatedComment = await Post.findOneAndUpdate(
-      { "_id": req.params.postId, "comments._id": req.params.commentId },
+      {
+        _id: postId,
+        "comments._id": commentId
+      },
       { $set: { "comments.$[comments].content": content } },
-      { new: true, arrayFilters: [{ "comments._id": req.params.commentId }] }
+      { new: true, arrayFilters: [{ "comments._id": commentId }] }
     );
 
     if (!updatedComment) {
@@ -70,7 +76,7 @@ router.put("/:commentId", isAuth, async (req, res) => {
   }
 });
 
-router.delete("/:commentId", isAuth, async (req, res) => {
+router.delete("/:commentId", isToken, isCommentAuth, async (req, res) => {
   try {
     let post = await Post.findOneAndUpdate(
       { "_id": req.params.postId },
@@ -95,7 +101,7 @@ router.delete("/:commentId", isAuth, async (req, res) => {
  * Reactions
  */
 
-router.post("/:commentId/reactions", isAuth, async (req, res) => {
+router.post("/:commentId/reactions", isToken, isCommentReactionAuth, async (req, res) => {
   const { type } = req.body;
   const { postId, commentId } = req.params;
   try {
@@ -120,7 +126,7 @@ router.post("/:commentId/reactions", isAuth, async (req, res) => {
   }
 });
 
-router.put("/:commentId/reactions/:reactionId", isAuth, async (req, res) => {
+router.put("/:commentId/reactions/:reactionId", isToken, isCommentReactionAuth, async (req, res) => {
   const { type } = req.body;
   const { postId, reactionId } = req.params;
   try {
@@ -145,8 +151,8 @@ router.put("/:commentId/reactions/:reactionId", isAuth, async (req, res) => {
   }
 });
 
-router.delete("/:commentId/reactions/:reactionId", isAuth, async (req, res) => {
-  const { postId, reactionId } = req.params;
+router.delete("/:commentId/reactions/:reactionId", isToken, isCommentReactionAuth, async (req, res) => {
+  const { postId, commentId, reactionId } = req.params;
   try {
     let post = await Post.findOneAndUpdate(
       {

@@ -2,14 +2,15 @@ const { Post } = require('../models/post');
 const { User } = require('../models/user');
 const router = require('express').Router({ mergeParams: true });
 const jwt = require('jsonwebtoken');
-const { isAuth } = require('../middleware/auth');
+const { isToken } = require('../middleware/token');
+const { isSubCommentAuth } = require('../middleware/auth');
 
 
 /**
  * SubComments
  */
 
-router.post("/", isAuth, async (req, res) => {
+router.post("/", isToken, async (req, res) => {
   try {
     const user = await User.findById(req.userId);
 
@@ -39,7 +40,7 @@ router.post("/", isAuth, async (req, res) => {
   }
 });
 
-router.put("/:subCommentId", isAuth, async (req, res) => {
+router.put("/:subCommentId", isToken, isSubCommentAuth, async (req, res) => {
   const { postId, commentId, subCommentId } = req.params;
   const { content } = req.body;
   try {
@@ -66,7 +67,7 @@ router.put("/:subCommentId", isAuth, async (req, res) => {
   }
 });
 
-router.delete("/:subCommentId", isAuth, async (req, res) => {
+router.delete("/:subCommentId", isToken, isSubCommentAuth, async (req, res) => {
   const { postId, commentId, subCommentId } = req.params;
 
   try {
@@ -93,7 +94,7 @@ router.delete("/:subCommentId", isAuth, async (req, res) => {
  */
 
 
-router.post("/:subCommentId/reactions", isAuth, async (req, res) => {
+router.post("/:subCommentId/reactions", isToken, async (req, res) => {
   const { type } = req.body;
   const { postId, commentId, subCommentId } = req.params;
   try {
@@ -101,10 +102,10 @@ router.post("/:subCommentId/reactions", isAuth, async (req, res) => {
       {
         _id: postId,
         "comments._id": commentId,
-        "comments.$[comments].subComments.$[subComment].reactions._id": { $ne: req.userId } // Check if "id" value doesn't exist in the reactions array
+        "comments.$[comments].subComments.$[subComments].reactions.user": { $ne: req.userId } // Check if "id" value doesn't exist in the reactions array
       },
-      { $push: { "comments.$[comment].reactions": { type, _id: req.userId } } },
-      { new: true, arrayFilters: [{ "comment._id": commentId }, { "subComment._id": subCommentId }] }
+      { $push: { "comments.$[comments].subComments.$[subComments].reactions": { type, user: req.userId } } },
+      { new: true, arrayFilters: [{ "comments._id": commentId }, { "subComments._id": subCommentId }] }
     );
 
     if (!post) {
@@ -118,7 +119,7 @@ router.post("/:subCommentId/reactions", isAuth, async (req, res) => {
   }
 });
 
-router.put("/:subCommentId/reactions/:reactionId", isAuth, async (req, res) => {
+router.put("/:subCommentId/reactions/:reactionId", isToken, async (req, res) => {
   const { type } = req.body;
   const { postId, commentId, subCommentId, reactionId } = req.params;
   try {
@@ -150,20 +151,20 @@ router.put("/:subCommentId/reactions/:reactionId", isAuth, async (req, res) => {
   }
 });
 
-router.delete("/:subCommentId/reactions/:reactionId", isAuth, async (req, res) => {
+router.delete("/:subCommentId/reactions/:reactionId", isToken, async (req, res) => {
   const { postId, commentId, subCommentId, reactionId } = req.params;
   try {
     let post = await Post.findOneAndUpdate(
       {
         _id: postId,
         "comments._id": commentId,
-        "comments.$[comments].subComments.$[subComment].reactions._id": { $eq: req.userId } // Check if "id" value doesn't exist in the reactions array
+        "comments.$[comments].subComments.$[subComments].reactions._id": { $eq: req.userId } // Check if "id" value doesn't exist in the reactions array
       },
-      { $pull: { "comments.$[comment].subComments.$[subComment].reactions.": { _id: reactionId } } },
+      { $pull: { "comments.$[comments].subComments.$[subComments].reactions": { _id: reactionId } } },
       {
         new: true, arrayFilters: [
-          { "comment._id": commentId },
-          { "subComment._id": subCommentId }
+          { "comments._id": commentId },
+          { "subComments._id": subCommentId }
         ]
       }
     );
