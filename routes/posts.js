@@ -47,6 +47,7 @@ router.get('/:postId', isToken, async (req, res) => {
 
 router.post("/", isToken, async (req, res) => {
   const { content } = req.body;
+  console.log(req.userId);
   try {
     let post = new Post({
       content,
@@ -60,7 +61,7 @@ router.post("/", isToken, async (req, res) => {
       }
     }, { new: true });
 
-    return res.status(201).json(post);
+    res.json(post);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Server error" });
@@ -117,7 +118,7 @@ router.delete("/:postId", isToken, isPostAuth, async (req, res) => {
  * Reactions
  */
 
-router.post("/:postId/reactions", isToken, isReactionAuth, async (req, res) => {
+router.post("/:postId/reactions", isToken, async (req, res) => {
   const { type } = req.body;
   const { postId } = req.params;
   try {

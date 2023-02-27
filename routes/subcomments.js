@@ -3,7 +3,7 @@ const { User } = require('../models/user');
 const router = require('express').Router({ mergeParams: true });
 const jwt = require('jsonwebtoken');
 const { isToken } = require('../middleware/token');
-const { isSubCommentAuth } = require('../middleware/auth');
+const { isSubCommentAuth, isSubcommentReactionAuth } = require('../middleware/auth');
 
 
 /**
@@ -119,7 +119,7 @@ router.post("/:subCommentId/reactions", isToken, async (req, res) => {
   }
 });
 
-router.put("/:subCommentId/reactions/:reactionId", isToken, async (req, res) => {
+router.put("/:subCommentId/reactions/:reactionId", isToken, isSubcommentReactionAuth, async (req, res) => {
   const { type } = req.body;
   const { postId, commentId, subCommentId, reactionId } = req.params;
   try {
@@ -151,7 +151,7 @@ router.put("/:subCommentId/reactions/:reactionId", isToken, async (req, res) => 
   }
 });
 
-router.delete("/:subCommentId/reactions/:reactionId", isToken, async (req, res) => {
+router.delete("/:subCommentId/reactions/:reactionId", isToken, isSubcommentReactionAuth, async (req, res) => {
   const { postId, commentId, subCommentId, reactionId } = req.params;
   try {
     let post = await Post.findOneAndUpdate(

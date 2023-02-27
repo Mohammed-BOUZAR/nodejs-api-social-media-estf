@@ -8,8 +8,7 @@ module.exports.reactionSchema = new mongoose.Schema({
   },
   user: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    unique: true
+    ref: 'User'
   },
   date_time: {
     type: Date,

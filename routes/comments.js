@@ -101,7 +101,7 @@ router.delete("/:commentId", isToken, isCommentAuth, async (req, res) => {
  * Reactions
  */
 
-router.post("/:commentId/reactions", isToken, isCommentReactionAuth, async (req, res) => {
+router.post("/:commentId/reactions", isToken, async (req, res) => {
   const { type } = req.body;
   const { postId, commentId } = req.params;
   try {
