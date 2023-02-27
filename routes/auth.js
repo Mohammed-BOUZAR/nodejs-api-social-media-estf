@@ -18,7 +18,7 @@ router.post("/register", async (req, res) => {
 
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
-  await User.findOne({ email }, (err, user) => {
+  User.findOne({ email }, (err, user) => {
     if (err) {
       console.error(err);
       return res.status(500).send({ message: 'Server error' });
@@ -36,7 +36,7 @@ router.post('/login', async (req, res) => {
       }
       const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_KEY);
       res.cookie('jwt', token, { httpOnly: true });
-      res.setHeader('Set-Cookie', `jwt=${token}; HttpOnly`);
+      // res.setHeader('Set-Cookie', `jwt=${token}; HttpOnly`);
       res.send({ token });
     });
   });
