@@ -5,7 +5,37 @@ const comments = require('./comments');
 const jwt = require('jsonwebtoken');
 const { isToken } = require('../middleware/token');
 const { isPostAuth, isReactionAuth } = require('../middleware/auth');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+    const day = now.getDate();
+    const uploadDir = `uploads/${year}/${month}/${day}/`;
+
+    // Create the directory if it doesn't exist
+    const dir = path.resolve(uploadDir);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const extension = path.extname(file.originalname);
+    const timestamp = new Date().toISOString().replace(/:/g, '-');
+    cb(null, timestamp + extension); // set the filename to the current date and time with the original extension
+  }
+});
+const upload = multer({
+  storage,
+  limits: { fileSize: 75 * 1024 * 1024 }, // set the maximum file size to 75 MB
+
+});
 
 /**
  * Posts
@@ -45,22 +75,38 @@ router.get('/:postId', isToken, async (req, res) => {
   }
 });
 
-router.post("/", isToken, async (req, res) => {
+router.get('/:postId/download/:year/:month/:day/:filename', async (req, res) => {
+  const { postId, day, filename, month, year } = req.params;
+  const file = path.join(__dirname, `../uploads/${year}/${month}/${day}`, filename);
+  const post = await Post.findOne({ _id: postId });
+  if(!post) return res.status(400).json({message: "Post Not exist"})
+  const link = post.links.find(element => element.path == `${year}/${month}/${day}/${filename}`);
+  if (!link) return res.status(400).json({ message: "File not exist" });
+  res.download(file, link.name, (err) => {
+    if (err) {
+      return console.log(err);
+    }
+  });
+});
+
+router.post("/", isToken, upload.array('files'), async (req, res) => {
   const { content } = req.body;
-  console.log(req.userId);
-  try {
-    let post = new Post({
-      content,
-      user: req.userId
+  const files = [];
+
+  req.files.forEach(element => {
+    const str = element.path;
+    const arr = str.split("/");
+    const result = arr.slice(1).join("/");
+
+    files.push({
+      extname: path.extname(element.originalname), name: element.originalname, path: result
     });
+  });
+
+  try {
+    let post = new Post({ content, links: files, user: req.userId });
     post = await post.save();
-
-    await User.findByIdAndUpdate(req.userId, {
-      $push: {
-        'posts': post._id
-      }
-    }, { new: true });
-
+    await User.findByIdAndUpdate(req.userId, { $push: { 'posts': post._id } }, { new: true });
     res.json(post);
   } catch (error) {
     console.error(error);
@@ -114,6 +160,16 @@ router.delete("/:postId", isToken, isPostAuth, async (req, res) => {
 });
 
 
+// handle errors caused by file size limit
+// router.use(function (err, req, res, next) {
+//   if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+//     res.status(400).send({ message: 'File too large' });
+//   } else {
+//     next(err);
+//   }
+// });
+
+
 /**
  * Reactions
  */
@@ -122,43 +178,41 @@ router.post("/:postId/reactions", isToken, async (req, res) => {
   const { type } = req.body;
   const { postId } = req.params;
   try {
-    let post = await Post.findByIdAndUpdate(
-      { _id: postId, "reactions.user": { $ne: req.userId } }, // Check if "id" value doesn't exist in the reactions array
-      { $push: { 'reactions': { type, user: req.userId } } },
-      { new: true }
-    );
+    let post = await Post.findOne({ _id: postId });
+    if (!post) return res.status(404).json({ error: "Post not found" });
 
-    if (!post) {
-      return res.status(404).json({ error: "Post not found" });
+    if (post.reactions.find(reaction => reaction.user == req.userId)) {
+      return res.status(400).json({ error: "User has already reacted to this post" });
     }
-
-    return res.status(201).json(post);
+    post.reactions.push({ type, user: req.userId });
+    await post.save();
+    res.json(post);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Server error" });
   }
 });
 
-router.put("/:postId/reactions/:reactionId", isToken, isReactionAuth, async (req, res) => {
-  const { type } = req.body;
-  const { postId, reactionId } = req.params;
-  try {
-    let updatedComment = await Post.findOneAndUpdate(
-      { _id: postId, "reactions.user": { $eq: req.userId } }, // Check if "id" value doesn't exist in the reactions array
-      { $set: { "reactions.$[reactions].type": type } },
-      { new: true, arrayFilters: [{ "reactions._id": reactionId }] }
-    );
+// router.put("/:postId/reactions/:reactionId", isToken, isReactionAuth, async (req, res) => {
+//   const { type } = req.body;
+//   const { postId, reactionId } = req.params;
+//   try {
+//     let updatedComment = await Post.findOneAndUpdate(
+//       { _id: postId, "reactions.user": { $eq: req.userId } }, // Check if "id" value doesn't exist in the reactions array
+//       { $set: { "reactions.$[reactions].type": type } },
+//       { new: true, arrayFilters: [{ "reactions._id": reactionId }] }
+//     );
 
-    if (!updatedComment) {
-      return res.status(404).json({ error: "Comment not found" });
-    }
+//     if (!updatedComment) {
+//       return res.status(404).json({ error: "Comment not found" });
+//     }
 
-    return res.status(200).json(updatedComment);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Server error" });
-  }
-});
+//     return res.status(200).json(updatedComment);
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({ error: "Server error" });
+//   }
+// });
 
 router.delete("/:postId/reactions/:reactionId", isToken, isReactionAuth, async (req, res) => {
   const { postId, reactionId } = req.params;

@@ -11,7 +11,7 @@ const { isCommentAuth, isCommentReactionAuth } = require('../middleware/auth');
  * Comments
  */
 
-router.use('/:commentId/subComments', subcomments);
+router.use('/:commentId/subcomments', subcomments);
 
 router.get("/:commentId", isToken, async (req, res) => {
   const { postId, commentId } = req.params;
@@ -105,20 +105,15 @@ router.post("/:commentId/reactions", isToken, async (req, res) => {
   const { type } = req.body;
   const { postId, commentId } = req.params;
   try {
-    let post = await Post.findByIdAndUpdate(
-      {
-        _id: postId,
-        "comments._id": commentId,
-        "comments.$[comments].reactions._id": { $ne: req.userId } // Check if "id" value doesn't exist in the reactions array
-      },
-      { $push: { "comments.$[comment].reactions": { type, _id: req.userId } } },
-      { new: true, arrayFilters: [{ "comment._id": commentId }] }
-    );
-
-    if (!post) {
-      return res.status(404).json({ error: "Post not found" });
+    let post = await Post.findOne({ _id: postId });
+    if (!post) return res.status(404).json({ error: "Post not found" });
+    const comment = post.comments.find(element => element._id == commentId);
+    if (!comment) return res.status(404).json({ error: "Comment not found" });
+    if (comment.reactions.find(reaction => reaction.user == req.userId)) {
+      return res.status(400).json({ error: "User has already reacted to this Comment" });
     }
-
+    comment.reactions.push({ type, user: req.userId });
+    await post.save();
     return res.status(201).json(post);
   } catch (error) {
     console.error(error);
@@ -126,30 +121,30 @@ router.post("/:commentId/reactions", isToken, async (req, res) => {
   }
 });
 
-router.put("/:commentId/reactions/:reactionId", isToken, isCommentReactionAuth, async (req, res) => {
-  const { type } = req.body;
-  const { postId, reactionId } = req.params;
-  try {
-    let updatedComment = await Post.findByIdAndUpdate(
-      {
-        _id: postId,
-        "comments._id": commentId,
-        "comments.$[comments].reactions._id": { $eq: req.userId } // Check if "id" value doesn't exist in the reactions array
-      },
-      { $set: { "comments.$[comment].reactions.$[reaction].type": type } },
-      { new: true, arrayFilters: [{ "comment._id": commentId }, { "reaction._id": reactionId }] }
-    );
+// router.put("/:commentId/reactions/:reactionId", isToken, isCommentReactionAuth, async (req, res) => {
+//   const { type } = req.body;
+//   const { postId, reactionId } = req.params;
+//   try {
+//     let updatedComment = await Post.findByIdAndUpdate(
+//       {
+//         _id: postId,
+//         "comments._id": commentId,
+//         "comments.$[comments].reactions._id": { $eq: req.userId } // Check if "id" value doesn't exist in the reactions array
+//       },
+//       { $set: { "comments.$[comment].reactions.$[reaction].type": type } },
+//       { new: true, arrayFilters: [{ "comment._id": commentId }, { "reaction._id": reactionId }] }
+//     );
 
-    if (!updatedComment) {
-      return res.status(404).json({ error: "Comment not found" });
-    }
+//     if (!updatedComment) {
+//       return res.status(404).json({ error: "Comment not found" });
+//     }
 
-    return res.status(200).json(updatedComment);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Server error" });
-  }
-});
+//     return res.status(200).json(updatedComment);
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({ error: "Server error" });
+//   }
+// });
 
 router.delete("/:commentId/reactions/:reactionId", isToken, isCommentReactionAuth, async (req, res) => {
   const { postId, commentId, reactionId } = req.params;

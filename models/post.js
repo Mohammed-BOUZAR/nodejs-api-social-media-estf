@@ -7,6 +7,11 @@ const postSchema = new mongoose.Schema({
   content: {
     type: String
   },
+  links: [{
+    extname: String,
+    name: String,
+    path: String
+  }],
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'

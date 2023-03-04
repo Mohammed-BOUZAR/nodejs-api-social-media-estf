@@ -65,12 +65,18 @@ module.exports.isSubCommentAuth = async (req, res, next) => {
 module.exports.isReactionAuth = async (req, res, next) => {
   try {
     const post = await Post.findOne({ _id: req.params.postId });
+
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
-    if (String(post.user) === String(req.userId)) {
-      return res.status(401).json({ message: 'Not authorized to react on your own post' });
+
+    if (post.reactions.find(reaction => reaction.user != req.userId)) {
+      return res.status(400).json({ message: 'Not authorized to react on your own post' });
     }
+
+    // if (post.user != req.userId) {
+    //   return res.status(401).json({ message: 'Not authorized to react on your own post' });
+    // }
     next();
   } catch (error) {
     console.error(error);
@@ -88,8 +94,8 @@ module.exports.isCommentReactionAuth = async (req, res, next) => {
     if (!comment) {
       return res.status(404).json({ message: 'Comment not found' });
     }
-    if (String(comment.user) === String(req.userId)) {
-      return res.status(401).json({ message: 'Not authorized to react on your own comment' });
+    if (comment.reactions.find(reaction => reaction.user != req.userId)) {
+      return res.status(400).json({ message: 'Not authorized to react on your own comment' });
     }
     next();
   } catch (error) {
@@ -99,22 +105,22 @@ module.exports.isCommentReactionAuth = async (req, res, next) => {
 };
 
 module.exports.isSubcommentReactionAuth = async (req, res, next) => {
+  const { postId, commentId, subCommentId } = req.params;
   try {
-    const post = await Post.findOne({ _id: req.params.postId });
-    if (!post) {
-      return res.status(404).json({ message: 'Post not found' });
+    const post = await Post.findOne({ _id: postId });
+    if (!post) return res.status(404).json({ message: 'Post not found' });
+    const comment = post.comments.id(commentId);
+    console.log("comment")
+    console.log(comment)
+    if (!comment) return res.status(404).json({ message: 'Comment not found' });
+    const subcomment = comment.subComments.id(subCommentId);
+    if (!subcomment) return res.status(404).json({ message: 'Subcomment not found' });
+    if (subcomment.reactions.find(reaction => reaction.user != req.userId)) {
+      return res.status(400).json({ message: 'Not authorized to react on your own subComment' });
     }
-    const comment = post.comments.id(req.params.commentId);
-    if (!comment) {
-      return res.status(404).json({ message: 'Comment not found' });
-    }
-    const subcomment = comment.subcomments.id(req.params.subcommentId);
-    if (!subcomment) {
-      return res.status(404).json({ message: 'Subcomment not found' });
-    }
-    if (String(subcomment.user) === String(req.userId)) {
-      return res.status(401).json({ message: 'Not authorized to react on your own subcomment' });
-    }
+    // if (String(subcomment.user) === String(req.userId)) {
+    //   return res.status(401).json({ message: 'Not authorized to react on your own subcomment' });
+    // }
     next();
   } catch (error) {
     console.error(error);

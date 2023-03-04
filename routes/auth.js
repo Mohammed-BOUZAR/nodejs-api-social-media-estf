@@ -3,6 +3,11 @@ const router = require('express').Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
+
+/**
+ * Auth
+ */
+
 router.post("/register", async (req, res) => {
   const { first_name, last_name, email, date_birth, state, cin, cne, password } = req.body;
   User.create({ first_name, last_name, email, date_birth, state, cin, cne, password },
@@ -35,8 +40,7 @@ router.post('/login', async (req, res) => {
         return res.status(401).send({ message: 'Authentication failed' });
       }
       const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_KEY);
-      res.cookie('jwt', token, { httpOnly: true });
-      // res.setHeader('Set-Cookie', `jwt=${token}; HttpOnly`);
+      res.cookie('jwt', token, { maxAge: 7 * 24 * 60 * 60 * 1000 });
       res.send({ token });
     });
   });
