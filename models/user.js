@@ -4,21 +4,21 @@ const { postSchema } = require("./post");
 const bcrypt = require('bcryptjs')
 
 const userSchema = new mongoose.Schema({
-  first_name: {
+  firstName: {
     type: String,
     required: [true, "enter a valid first name"],
     minlength: [3, "First name should be at least 2 characters long"],
     maxlength: [50, "First name should be at most 50 characters long"],
     trim: true
   },
-  last_name: {
+  lastName: {
     type: String,
     required: [true, "enter a valid last name"],
     minlength: [2, "Last name should be at least 2 characters long"],
     maxlength: [50, "Last name should be at most 50 characters long"],
     trim: true
   },
-  date_birth: {
+  dateBirth: {
     type: Date,
     required: [true, "enter a valid date of birth"]
   },
@@ -52,7 +52,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'enter a valid CNE']
   },
-  notificaion: [new mongoose.Schema({
+  notificaions: [new mongoose.Schema({
     type: String,
     content: String,
     url: String,
@@ -65,10 +65,6 @@ const userSchema = new mongoose.Schema({
   posts: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Post'
-  }],
-  conversation: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Conversation'
   }]
 });
 

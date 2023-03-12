@@ -8,7 +8,7 @@ const { isToken } = require('../middleware/token');
  * Users
  */
 
-router.get('/', isToken, async (req, res) => {
+router.get('/', async (req, res) => {
   const currentUser = req.userId;
   User.find({ _id: { $ne: currentUser } }, (err, users) => {
     if (err) {
@@ -22,7 +22,7 @@ router.get('/', isToken, async (req, res) => {
   }).select('first_name last_name email date_birth');
 });
 
-router.get('/:id', isToken, async (req, res) => {
+router.get('/:id', async (req, res) => {
   const userId = req.params.id;
 
   try {
@@ -60,7 +60,7 @@ router.get('/:id', isToken, async (req, res) => {
   }
 });
 
-router.put('/:id', isToken, async (req, res) => {
+router.put('/:id', async (req, res) => {
   const userId = req.params.id;
   const { first_name, last_name, email, date_birth, state, cin, cne, password } = req.body;
 
@@ -91,7 +91,7 @@ router.put('/:id', isToken, async (req, res) => {
   );
 });
 
-router.delete('/:id', isToken, async (req, res) => {
+router.delete('/:id', async (req, res) => {
   const userId = req.params.id;
 
   // Verify JWT token

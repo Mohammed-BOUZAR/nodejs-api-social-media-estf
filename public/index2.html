@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Socket.io client</title>
+  <script src="/socket.io/socket.io.js" type="module"></script>
+  <script type="module">
+    const socket = io('/', {
+      path: '/socket.io',
+      extraHeaders: {
+        'Cookie': 'jwt=<JWT_TOKEN>'
+      }
+    });
+
+    socket.on('connect', () => {
+      console.log('Socket.io connected');
+    });
+
+    socket.on('disconnect', () => {
+      console.log('Socket.io disconnected');
+    });
+
+    // Send a message to the server when the form is submitted
+    const form = document.querySelector('#message-form');
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      const messageInput = document.querySelector('#message-input');
+      const message = messageInput.value.trim();
+      if (message !== '') {
+        socket.emit('message', message);
+        messageInput.value = '';
+      }
+    });
+
+    // Print received messages in the page
+    const messageList = document.querySelector('#message-list');
+    socket.on('message', message => {
+      const li = document.createElement('li');
+      li.textContent = message;
+      messageList.appendChild(li);
+    });
+  </script>
+</head>
+
+<body>
+  <h1>Socket.io client</h1>
+  <form id="message-form">
+    <label for="message-input">Message:</label>
+    <input type="text" id="message-input">
+    <button type="submit">Send</button>
+  </form>
+  <ul id="message-list"></ul>
+</body>
+
+</html>

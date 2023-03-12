@@ -43,7 +43,7 @@ const upload = multer({
 
 router.use('/:postId/comments', comments);
 
-router.get("/", isToken, async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const posts = await Post.find({ user: req.userId });
 
@@ -58,7 +58,7 @@ router.get("/", isToken, async (req, res) => {
   }
 });
 
-router.get('/:postId', isToken, async (req, res) => {
+router.get('/:postId', async (req, res) => {
   try {
     if (!req.userId) {
       return res.status(401).send({ message: 'Authentication required' });
@@ -89,7 +89,7 @@ router.get('/:postId/download/:year/:month/:day/:filename', async (req, res) => 
   });
 });
 
-router.post("/", isToken, upload.array('files'), async (req, res) => {
+router.post("/", upload.array('files'), async (req, res) => {
   const { content } = req.body;
   const files = [];
 
@@ -114,7 +114,7 @@ router.post("/", isToken, upload.array('files'), async (req, res) => {
   }
 });
 
-router.put('/:postId', isToken, isPostAuth, async (req, res) => {
+router.put('/:postId', isPostAuth, async (req, res) => {
   const { content } = req.body;
   const { postId } = req.params;
   try {
@@ -135,7 +135,7 @@ router.put('/:postId', isToken, isPostAuth, async (req, res) => {
   }
 });
 
-router.delete("/:postId", isToken, isPostAuth, async (req, res) => {
+router.delete("/:postId", isPostAuth, async (req, res) => {
   const { postId } = req.params;
   try {
     const userId = req.userId;
@@ -174,7 +174,7 @@ router.delete("/:postId", isToken, isPostAuth, async (req, res) => {
  * Reactions
  */
 
-router.post("/:postId/reactions", isToken, async (req, res) => {
+router.post("/:postId/reactions", async (req, res) => {
   const { type } = req.body;
   const { postId } = req.params;
   try {
@@ -193,7 +193,7 @@ router.post("/:postId/reactions", isToken, async (req, res) => {
   }
 });
 
-// router.put("/:postId/reactions/:reactionId", isToken, isReactionAuth, async (req, res) => {
+// router.put("/:postId/reactions/:reactionId", isReactionAuth, async (req, res) => {
 //   const { type } = req.body;
 //   const { postId, reactionId } = req.params;
 //   try {
@@ -214,7 +214,7 @@ router.post("/:postId/reactions", isToken, async (req, res) => {
 //   }
 // });
 
-router.delete("/:postId/reactions/:reactionId", isToken, isReactionAuth, async (req, res) => {
+router.delete("/:postId/reactions/:reactionId", isReactionAuth, async (req, res) => {
   const { postId, reactionId } = req.params;
   try {
     let post = await Post.findOneAndUpdate(
