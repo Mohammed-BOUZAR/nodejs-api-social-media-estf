@@ -9,7 +9,7 @@
     JWT_TOKEN = JWT_TOKEN.split('=')[1];
     console.log(JWT_TOKEN);
 
-    const socket = io('/chat');
+    const socket = io('/socket');
 
     socket.on('connect', () => {
       console.log('Socket.io connected socketId: ' + socket.id);
@@ -61,7 +61,7 @@
       })
         .then((response) => {
           response.json().then(data => { conversationId = data._id; console.log(data) })
-          socket.emit('send', { room: conversation.value, message: messageContent });
+          socket.emit('send', { room: conversationIdInput.value, message: messageContent });
           console.log("message: ", messageContent);
           const messageEl = document.createElement('div');
           messageEl.classList.add('message');
@@ -114,9 +114,9 @@
   <h1>Socket.io client</h1>
   <div id="messages-container"></div>
   <form method="post" id="login">
-    <!-- <input type="text" value="a@a.a" name="email"> -->
+    <input type="text" value="aa@aa.a" name="email">
     <!-- <input type="text" value="b@b.b" name="email"> -->
-    <input type="text" value="samir@gmail.com" name="email">
+    <!-- <input type="text" value="samir@gmail.com" name="email"> -->
     <input type="password" value="12345" name="password">
     <button type="submit">login</button>
   </form>
