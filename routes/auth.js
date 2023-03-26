@@ -16,7 +16,8 @@ router.post("/register", async (req, res) => {
         console.log(err);
         res.status(500).send({ message: 'Error adding new user' });
       } else {
-        res.send({ user });
+        const { firstName, lastName, email, dateBirth, state, cin, cne } = user;
+        res.send({ firstName, lastName, email, dateBirth, state, cin, cne });
       }
     });
 });

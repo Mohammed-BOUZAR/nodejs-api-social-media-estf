@@ -8,7 +8,7 @@ module.exports.isPostAuth = async (req, res, next) => {
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
-    if (String(post.user) != String(req.userId)) {
+    if (post.user._id != req.userId) {
       return res.status(401).json({ message: 'Not authorized' });
     }
     next();

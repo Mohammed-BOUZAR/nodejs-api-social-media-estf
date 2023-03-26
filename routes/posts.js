@@ -93,17 +93,19 @@ router.post("/", upload.array('files'), async (req, res) => {
   const { content } = req.body;
   const files = [];
 
-  req.files.forEach(element => {
-    const str = element.path;
-    const arr = str.split("/");
-    const result = arr.slice(1).join("/");
-
-    files.push({
-      extname: path.extname(element.originalname), name: element.originalname, path: result
-    });
-  });
-
   try {
+    if(req.files){
+      req.files.forEach(element => {
+        const str = element.path;
+        const arr = str.split("/");
+        const result = arr.slice(1).join("/");
+    
+        files.push({
+          extname: path.extname(element.originalname), name: element.originalname, path: result
+        });
+      });
+    }
+
     let post = new Post({ content, links: files, user: req.userId });
     post = await post.save();
     await User.findByIdAndUpdate(req.userId, { $push: { 'posts': post._id } }, { new: true });
