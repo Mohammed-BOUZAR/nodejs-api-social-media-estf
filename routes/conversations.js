@@ -47,31 +47,6 @@ router.post('/', async (req, res) => {
   }
 });
 
-// router.put('/:conversationId', async (req, res) => {
-//   const { conversationId } = req.params;
-//   try {
-//     const conversation = await Conversation.findById(conversationId);
-//     if (!conversation)
-//       return res.status(404).json({ message: 'Conversation not found' });
-//     const { name, participant, message } = req.body;
-//     // Update the conversation object
-//     conversation.name = name || conversation.name;
-//     conversation.participant = participant || conversation.participant;
-//     conversation.messages = message || conversation.messages;
-//     // Save the updated conversation to the database
-//     await conversation.save();
-//     // Populate the participant and sender fields with their respective user objects
-//     await conversation
-//       .populate('participant', 'name email')
-//       .populate('message.sender', 'name email')
-//       .execPopulate();
-//     // Return the updated conversation object
-//     res.json(conversation);
-//   } catch (error) {
-//     console.error(error.message);
-//     res.status(500).send('Server Error');
-//   }
-// });
 
 router.delete('/:conversationId', async (req, res) => {
   const { conversationId } = req.params;
@@ -125,7 +100,8 @@ router.post('/:conversationId/messages', (req, res) => {
       const newUser = {
         sender: senderId,
         content: content,
-        unread: conversation.participant.filter(participantId => participantId != senderId)
+        unread: conversationId
+        // unread: conversation.participant.filter(participantId => participantId != senderId)
       }
       console.log(newUser);
       conversation.messages.push(newUser);

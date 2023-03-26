@@ -15,7 +15,7 @@ const storage = multer.diskStorage({
     const year = now.getFullYear();
     const month = now.getMonth() + 1;
     const day = now.getDate();
-    const uploadDir = `uploads/${year}/${month}/${day}/`;
+    const uploadDir = `public/files/${year}/${month}/${day}/`;
 
     // Create the directory if it doesn't exist
     const dir = path.resolve(uploadDir);
