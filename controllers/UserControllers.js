@@ -12,7 +12,7 @@ module.exports.getUsers = async (req, res) => {
             res.cookie('jwt', token, { httpOnly: true });
             res.send({ users });
         }
-    }).select('first_name last_name email date_birth');
+    }).select('firstName lastName email dateBirth profile');
 };
 
 module.exports.getUser = async (req, res) => {
@@ -33,7 +33,7 @@ module.exports.getUser = async (req, res) => {
                     res.send({ user });
                 }
             })
-                .select('first_name last_name email date_birth');
+                .select('firstName lastName email dateBirth profile');
         } else {
             User.findOne({ _id: { $eq: currentUser } }, (err, user) => {
                 if (err) {

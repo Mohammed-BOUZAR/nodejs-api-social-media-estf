@@ -31,6 +31,7 @@ app.use(cors());
 app.use(express.static('public'));
 
 app.use("/api/auth", auth);
+app.use("/api/admin", admin);
 app.use("/api/users", isToken, users);
 app.use("/api/posts", isToken, posts);
 app.use("/api/notifications", isToken, notifications);

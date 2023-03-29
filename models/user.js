@@ -52,6 +52,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'enter a valid CNE']
   },
+  profile: String,
   notificaions: [new mongoose.Schema({
     type: String,
     content: String,
@@ -70,13 +71,13 @@ const userSchema = new mongoose.Schema({
 
 userSchema.pre('save', function (next) {
   bcrypt.hash(this.password, 10)
-  .then((result) => {
-    this.password = result;
-    next();
-  }).catch((err) => {
-    console.log(err)
-    next(err);
-  });
+    .then((result) => {
+      this.password = result;
+      next();
+    }).catch((err) => {
+      console.log(err)
+      next(err);
+    });
 });
 
 userSchema.methods.comparePassword = function (candidatePassword, cb) {
