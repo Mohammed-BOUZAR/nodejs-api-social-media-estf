@@ -13,6 +13,11 @@ const conversationSchema = new mongoose.Schema({
       ref: 'User'
     },
     content: String,
+    links: [{
+      extname: String,
+      name: String,
+      path: String
+    }],
     date: {
       type: Date,
       default: Date.now()

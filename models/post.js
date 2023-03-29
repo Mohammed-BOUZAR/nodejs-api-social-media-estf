@@ -47,8 +47,9 @@ postSchema.post('findOneAndUpdate', function (error, doc, next) {
 /* Kind of like a middleware function after creating our schema (since we have access to next) */
 /* Must be a function declaration (not an arrow function), because we want to use 'this' to reference our schema */
 const autoPopulatePostedBy = function(next) {
-  this.populate("user", "_id firstName lastName");
-  this.populate("comments.user", "_id firstName lastName");
+  this.populate("user", "_id firstName lastName profile");
+  this.populate("comments.user", "_id firstName lastName profile");
+  this.populate("comments.subComments.user", "_id firstName lastName profile");
   next();
 };
 

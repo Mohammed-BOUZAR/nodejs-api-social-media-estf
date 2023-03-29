@@ -75,36 +75,26 @@ io.of('/socket').on('connection', (socket) => {
         // if the reciever is connected: send him the comment as a notification
         // if he acknolodes the comment: registr the comment in the database as seen comment
         // else as unseen comment
-        io.of('socket-io').adapter.rooms.forEach(element => {
-            io.of('/socket-io').to(element).emit('notification-comment', comment);
-        });
+        io.of('/socket-io').to(socket.id).emit('notification-comment', comment);
     });
-    
+
 
     socket.on("replay", (replay) => {
-        io.of('socket-io').adapter.rooms.forEach(element => {
-            io.of('/socket-io').to(element).emit('notification-replay', replay);
-        });
+        io.of('/socket-io').to(socket.id).emit('notification-replay', replay);
     });
 
     socket.on("reaction-post", (reaction) => {
-        io.of('socket-io').adapter.rooms.forEach(element => {
-            io.of('/socket-io').to(element).emit('notification-reaction-post', reaction);
-        });
+        io.of('/socket-io').to(socket.id).emit('notification-reaction-post', reaction);
     });
 
     socket.on("reaction-comment", (reaction) => {
-        io.of('socket-io').adapter.rooms.forEach(element => {
-            io.of('/socket-io').to(element).emit('notification-reaction-comment', reaction);
-        });
+        io.of('/socket-io').to(socket.id).emit('notification-reaction-comment', reaction);
     });
 
     socket.on("reaction-replay", (reaction) => {
-        io.of('socket-io').adapter.rooms.forEach(element => {
-            io.of('/socket-io').to(element).emit('notification-reaction-replay', reaction);
-        });
+        io.of('/socket-io').to(socket.id).emit('notification-reaction-replay', reaction);
     });
-    
+
     socket.on('disconnect', () => {
         connectedUsers = io.of('/socket-io').emit('connection', { ConnectedUsers: connectedUsers });
         io.of('/socket-io').emit('disconnetion', { ConnectedUsers: connectedUsers })
