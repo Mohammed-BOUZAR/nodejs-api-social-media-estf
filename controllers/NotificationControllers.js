@@ -33,7 +33,7 @@ module.exports.setNotification = async (req, res) => {
     };
     user.notifications.push(notification);
     await user.save();
-    res.json(notification);
+    res.json({ notifications: user.notifications });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal server error' });
@@ -53,7 +53,7 @@ module.exports.putNotificationViewed = async (req, res) => {
     }
     notification.state = 'viewed';
     await user.save();
-    res.json(notification);
+    res.json({ url: user.notifications.url });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal server error' });
@@ -66,11 +66,13 @@ module.exports.putNotificationRead = async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    user.notifications.forEach(notification => {
-      notification.state = 'read';
-    });
+    if (user.notifications) {
+      user.notifications.forEach(notification => {
+        notification.state = 'read';
+      });
+    }
     await user.save();
-    res.json(user.notifications);
+    res.json({ notifications: user.notifications });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal server error' });

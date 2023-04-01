@@ -29,11 +29,7 @@ module.exports.getConversation = async (req, res) => {
 
 module.exports.setConversation = async (req, res) => {
     try {
-        const io = req.io;
-        console.log('post')
         const { userId } = req.body;
-        console.log("req.body: ");
-        console.log(req.body);
         let participant = [req.userId, userId];
         const conversation = await Conversation({
             participant
@@ -86,8 +82,6 @@ module.exports.getMessages = (req, res) => {
 
 module.exports.setMessage = (req, res) => {
     const { conversationId } = req.params;
-    const io = req.io;
-    // const { senderId, content } = req.body;
     const { content } = req.body;
     const senderId = req.userId;
 
@@ -114,7 +108,7 @@ module.exports.setMessage = (req, res) => {
             // Create a new message object and add it to the messages array
             const newUser = {
                 sender: senderId,
-                content: content,
+                content,
                 links: files,
                 unread: conversationId
                 // unread: conversation.participant.filter(participantId => participantId != senderId)
@@ -157,7 +151,6 @@ module.exports.putMessage = (req, res) => {
         })
         .then(savedConversation => {
             // Return the updated conversation as a response
-            // io.of("/chat").to(conversationId).emit('receive', content);
             res.json(savedConversation);
         })
         .catch(error => {

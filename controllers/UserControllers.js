@@ -55,13 +55,13 @@ module.exports.getUser = async (req, res) => {
 
 module.exports.putUser = async (req, res) => {
     const userId = req.params.id;
-    const { first_name, last_name, email, date_birth, state, cin, cne, password } = req.body;
+    const { firstName, lastName, email, dateBirth, state, cin, cne, password } = req.body;
 
     const updates = {};
-    if (first_name) updates.first_name = first_name;
-    if (last_name) updates.last_name = last_name;
+    if (firstName) updates.firstName = firstName;
+    if (lastName) updates.lastName = lastName;
     if (email) updates.email = email;
-    if (date_birth) updates.date_birth = date_birth;
+    if (dateBirth) updates.dateBirth = dateBirth;
     if (state) updates.state = state;
     if (cin) updates.cin = cin;
     if (cne) updates.cne = cne;
