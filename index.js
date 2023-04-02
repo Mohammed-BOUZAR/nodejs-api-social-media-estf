@@ -18,6 +18,7 @@ const app = express();
 const jwt = require('jsonwebtoken');
 
 const auth = require('./routes/auth');
+const admin = require('./routes/admin');
 const users = require('./routes/users');
 const posts = require('./routes/posts');
 const conversations = require('./routes/conversations');

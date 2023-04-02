@@ -53,12 +53,15 @@ const userSchema = new mongoose.Schema({
     required: [true, 'enter a valid CNE']
   },
   profile: String,
-  notificaions: [new mongoose.Schema({
+  notifications: [new mongoose.Schema({
     type: String,
     content: String,
     url: String,
-    enum: ['unread', 'viewed', 'read'],
-    date: {
+    state: {
+      type: String,
+      enum: ['unread', 'viewed', 'read']
+    },
+    date_time: {
       type: Date,
       default: Date.now()
     }

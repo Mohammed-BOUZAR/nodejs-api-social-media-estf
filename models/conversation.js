@@ -18,7 +18,7 @@ const conversationSchema = new mongoose.Schema({
       name: String,
       path: String
     }],
-    date: {
+    date_time: {
       type: Date,
       default: Date.now()
     },

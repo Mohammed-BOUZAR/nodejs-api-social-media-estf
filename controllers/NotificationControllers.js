@@ -28,8 +28,7 @@ module.exports.setNotification = async (req, res) => {
       type,
       content,
       url,
-      state: 'unread',
-      date: new Date()
+      state: 'unread'
     };
     user.notifications.push(notification);
     await user.save();

@@ -2,6 +2,7 @@ const { User } = require('../models/user');
 const jwt = require('jsonwebtoken');
 
 module.exports.authRegister = async (req, res) => {
+    console.log("auth register");
     const { firstName, lastName, email, dateBirth, state, cin, cne, password } = req.body;
     User.create({ firstName, lastName, email, dateBirth, state, cin, cne, password },
         (err, user) => {
@@ -16,8 +17,8 @@ module.exports.authRegister = async (req, res) => {
 };
 
 module.exports.authLogin = async (req, res) => {
-    console.log(req.body);
     const { email, password } = req.body;
+    console.log(req.body);
     User.findOne({ email }, (err, user) => {
         if (err) {
             console.error(err);
@@ -42,6 +43,7 @@ module.exports.authLogin = async (req, res) => {
 };
 
 module.exports.authLogout = (req, res) => {
+    console.log("auth login");
     res.clearCookie('jwt');
     res.send({ message: 'Logged out successfully' });
 };
