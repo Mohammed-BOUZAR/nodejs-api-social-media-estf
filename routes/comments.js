@@ -23,4 +23,4 @@ router.post("/:commentId/reactions", setCommentReaction);
 router.delete("/:commentId/reactions/:reactionId", isCommentReactionAuth, deleteCommentReaction);
 
 
-module.exports = router
+module.exports = router;

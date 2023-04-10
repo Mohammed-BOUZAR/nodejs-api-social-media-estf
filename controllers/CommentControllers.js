@@ -86,10 +86,11 @@ module.exports.putComment = async (req, res) => {
 };
 
 module.exports.deleteComment = async (req, res) => {
+    const { postId, commentId } = req.params;
     try {
         let post = await Post.findOneAndUpdate(
-            { "_id": req.params.postId },
-            { $pull: { "comments": { "_id": req.params.commentId } } },
+            { "_id": postId },
+            { $pull: { "comments": { "_id": commentId } } },
             { new: true }
         );
 

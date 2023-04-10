@@ -50,7 +50,7 @@ module.exports.deleteConversation = async (req, res) => {
             return res.status(404).json({ message: 'Conversation not found' });
         // Remove the conversation from the database
         await conversation.remove();
-        res.json({ message: 'Conversation deleted' });
+        res.json({ message: 'Conversation deleted succesfully!' });
     } catch (error) {
         console.error(error.message);
         res.status(500).send('Server Error');
@@ -66,7 +66,7 @@ module.exports.getMessages = (req, res) => {
     const { conversationId } = req.params;
 
     Conversation.findById(conversationId)
-        .populate('participant', 'firstName lastName profile') // populate participant user details
+        .populate('participant', 'first_name last_name profile') // populate participant user details
         .populate('messages.sender', '_id') // populate sender user details
         .populate('messages.unread', '_id') // populate unread user details
         .then(conversation => {

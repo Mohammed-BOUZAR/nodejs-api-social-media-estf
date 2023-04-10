@@ -1,24 +1,23 @@
 const mongoose = require("mongoose");
-// const { Conversation } = require("./conversation");
-const { postSchema } = require("./post");
-const bcrypt = require('bcryptjs')
+const bcrypt = require('bcryptjs');
+const Joi = require('joi');
 
 const userSchema = new mongoose.Schema({
-  firstName: {
+  first_name: {
     type: String,
     required: [true, "enter a valid first name"],
     minlength: [3, "First name should be at least 2 characters long"],
     maxlength: [50, "First name should be at most 50 characters long"],
     trim: true
   },
-  lastName: {
+  last_name: {
     type: String,
     required: [true, "enter a valid last name"],
     minlength: [2, "Last name should be at least 2 characters long"],
     maxlength: [50, "Last name should be at most 50 characters long"],
     trim: true
   },
-  dateBirth: {
+  date_birth: {
     type: Date,
     required: [true, "enter a valid date of birth"]
   },
@@ -53,6 +52,10 @@ const userSchema = new mongoose.Schema({
     required: [true, 'enter a valid CNE']
   },
   profile: String,
+  departement: {
+    type: String,
+    // required: true
+  },
   notifications: [new mongoose.Schema({
     type: String,
     content: String,
@@ -69,8 +72,15 @@ const userSchema = new mongoose.Schema({
   posts: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Post'
+  }],
+  conversations: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Conversation'
   }]
 });
+
+userSchema.set('toObject', { populate: 'posts' });
+userSchema.set('toJSON', { populate: 'posts' });
 
 userSchema.pre('save', function (next) {
   bcrypt.hash(this.password, 10)
@@ -98,6 +108,58 @@ userSchema.post('save', function (error, doc, next) {
   }
 });
 
+const userJoiSchema = Joi.object({
+  first_name: Joi.string().required().min(2).max(50).trim().messages({
+    'any.required': 'Enter a valid first name',
+    'string.empty': 'First name is required',
+    'string.min': 'First name should be at least 2 characters long',
+    'string.max': 'First name should be at most 50 characters long'
+  }),
+  last_name: Joi.string().required().min(2).max(50).trim().messages({
+    'any.required': 'Enter a valid last name',
+    'string.empty': 'Last name is required',
+    'string.min': 'Last name should be at least 2 characters long',
+    'string.max': 'Last name should be at most 50 characters long'
+  }),
+  date_birth: Joi.date().required().messages({
+    'any.required': 'Enter a valid date of birth'
+  }),
+  email: Joi.string().required().email().trim().lowercase().messages({
+    'any.required': 'Enter a valid email',
+    'string.empty': 'Email is required',
+    'string.email': 'Please enter a valid email'
+  }),
+  password: Joi.string().required().min(5).max(100).trim().messages({
+    'any.required': 'Password is required',
+    'string.empty': 'Password is required',
+    'string.min': 'Password should be at least 5 characters long',
+    'string.max': 'Password should be at most 100 characters long'
+  }),
+  state: Joi.string().required().valid('actif', 'en attente', 'inactif').messages({
+    'any.required': 'Enter a valid state',
+    'any.only': "State must be 'actif', 'en attente', or 'inactif'"
+  }),
+  cin: Joi.string().required().messages({
+    'any.required': 'Enter a valid CIN',
+    'string.empty': 'CIN is required'
+  }),
+  cne: Joi.string().required().messages({
+    'any.required': 'Enter a valid CNE',
+    'string.empty': 'CNE is required'
+  }),
+  profile: Joi.string()
+  // departement: Joi.string().required().messages({
+  //   'any.required': 'Enter a valid Departement',
+  //   'string.empty': 'Departement is required'
+  // })
+});
+
+// Validate user object using Joi
+const validateUser = (user) => {
+  return userJoiSchema.validate(user);
+};
+
+
 const User = new mongoose.model('User', userSchema);
 
-module.exports = { userSchema, User };
+module.exports = { userSchema, User, validateUser };

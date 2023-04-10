@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-// const { User } = require('./user');
 
 const conversationSchema = new mongoose.Schema({
   name: String,

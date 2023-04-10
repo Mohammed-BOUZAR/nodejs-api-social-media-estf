@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 const { reactionSchema } = require("./reaction");
-// const { User } = require("./user");
 
 module.exports.subCommentSchema = new mongoose.Schema({
   content: {

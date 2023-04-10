@@ -12,7 +12,7 @@ module.exports.getUsers = async (req, res) => {
             res.cookie('jwt', token, { httpOnly: true });
             res.send({ users });
         }
-    }).select('firstName lastName email dateBirth profile');
+    }).select('first_name last_name email date_birth profile');
 };
 
 module.exports.getUser = async (req, res) => {
@@ -33,7 +33,15 @@ module.exports.getUser = async (req, res) => {
                     res.send({ user });
                 }
             })
-                .select('firstName lastName email dateBirth profile');
+                .select('first_name last_name email date_birth profile')
+                .populate('posts', (err, populatedUser) => {
+                    if (err) {
+                        console.error(err);
+                        return res.status(500).send({ message: 'Error populating posts' });
+                    }
+                    // Send the response with the populated 'posts' field
+                    res.status(200).json(populatedUser);
+                });;
         } else {
             User.findOne({ _id: { $eq: currentUser } }, (err, user) => {
                 if (err) {
@@ -43,7 +51,15 @@ module.exports.getUser = async (req, res) => {
                     res.status(404).send({ message: 'User not found' });
                 } else {
                     console.log(user);
-                    res.send({ user });
+                    user.populate('posts', (err, populatedUser) => {
+                        if (err) {
+                            console.error(err);
+                            return res.status(500).send({ message: 'Error populating posts' });
+                        }
+                        // Send the response with the populated 'posts' field
+                        res.status(200).json(populatedUser);
+                    });
+                    // res.send({ user });
                 }
             });
         }
@@ -55,16 +71,16 @@ module.exports.getUser = async (req, res) => {
 
 module.exports.putUser = async (req, res) => {
     const userId = req.params.id;
-    const { firstName, lastName, email, dateBirth, state, cin, cne, password } = req.body;
+    const { first_name, last_name, email, date_birth, state, cin, cne, password } = req.body;
 
     const updates = {};
-    if (firstName) updates.firstName = firstName;
-    if (lastName) updates.lastName = lastName;
-    if (email) updates.email = email;
-    if (dateBirth) updates.dateBirth = dateBirth;
-    if (state) updates.state = state;
-    if (cin) updates.cin = cin;
-    if (cne) updates.cne = cne;
+    // if (first_name) updates.first_name = first_name;
+    // if (last_name) updates.last_name = last_name;
+    // if (email) updates.email = email;
+    // if (date_birth) updates.date_birth = date_birth;
+    // if (state) updates.state = state;
+    // if (cin) updates.cin = cin;
+    // if (cne) updates.cne = cne;
     if (password) updates.password = password;
 
     User.findOneAndUpdate(

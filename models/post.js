@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const { commentSchema } = require("./comment");
 const { reactionSchema } = require("./reaction");
-// const { User } = require("./user");
+const Joi = require("joi");
 
 const postSchema = new mongoose.Schema({
   content: {
@@ -19,6 +19,11 @@ const postSchema = new mongoose.Schema({
   date_time: {
     type: Date,
     default: Date.now()
+  },
+  state: {
+    type: String,
+    required: [true, "Enter a valid state"],
+    enum: ['actif', 'en attente', 'inactif']
   },
   reactions: [reactionSchema],
   comments: [commentSchema]
@@ -47,9 +52,9 @@ postSchema.post('findOneAndUpdate', function (error, doc, next) {
 /* Kind of like a middleware function after creating our schema (since we have access to next) */
 /* Must be a function declaration (not an arrow function), because we want to use 'this' to reference our schema */
 const autoPopulatePostedBy = function(next) {
-  this.populate("user", "_id firstName lastName profile");
-  this.populate("comments.user", "_id firstName lastName profile");
-  this.populate("comments.subComments.user", "_id firstName lastName profile");
+  this.populate("user", "_id first_name last_name profile");
+  this.populate("comments.user", "_id first_name last_name profile");
+  this.populate("comments.subComments.user", "_id first_name last_name profile");
   next();
 };
 
@@ -58,6 +63,21 @@ postSchema
   .pre("findOne", autoPopulatePostedBy)
   .pre("find", autoPopulatePostedBy)
   .pre("findByIdAndUpdate", autoPopulatePostedBy);
+
+  const userJoiSchema = Joi.object({
+    content: Joi.string().min(2).max(50).trim().messages({
+      'string.max': 'First name should be at most 500 characters long'
+    }),
+    state: Joi.string().required().valid('actif', 'en attente', 'inactif').messages({
+      'any.required': 'Enter a valid state',
+      'any.only': "State must be 'actif', 'en attente', or 'inactif'"
+    })
+  });
+  
+  // Validate user object using Joi
+  const validatePost = (user) => {
+    return userJoiSchema.validate(user);
+  };
 
 const Post = new mongoose.model('Post', postSchema);
 

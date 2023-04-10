@@ -8,7 +8,7 @@ const path = require('path');
 
 module.exports.getPosts = async (req, res) => {
     try {
-        const posts = await Post.find({ user: req.userId });
+        const posts = await Post.find({});
 
         if (!posts || posts.length === 0) {
             return res.status(200).json({ message: "No posts found" });
@@ -17,20 +17,15 @@ module.exports.getPosts = async (req, res) => {
         return res.status(200).json(posts);
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ error: "Server error" });
+        return res.status(500).json({ error: "Error fetching news posts" });
     }
 };
 
 module.exports.getPost = async (req, res) => {
+    const { postId } = req.params;
     try {
-        if (!req.userId) {
-            return res.status(401).send({ message: 'Authentication required' });
-        }
-
-        const post = await Post.findOne({ _id: req.params.postId });
-        if (!post) {
-            return res.status(404).json({ message: 'Post not found' });
-        }
+        const post = await Post.findOne({ _id: postId });
+        if (!post) return res.status(404).json({ message: 'Post not found' });
         return res.status(200).json(post);
     } catch (error) {
         console.error(error);
@@ -39,7 +34,7 @@ module.exports.getPost = async (req, res) => {
 };
 
 module.exports.setPost = async (req, res) => {
-    const { content } = req.body;
+    const { content, state } = req.body;
     const files = [];
     try {
         if (req.files) {
@@ -54,7 +49,7 @@ module.exports.setPost = async (req, res) => {
             });
         }
 
-        let post = new Post({ content, links: files, user: req.userId });
+        let post = new Post({ content, links: files, state, user: req.userId });
         post = await post.save();
         await User.findByIdAndUpdate(req.userId, { $push: { 'posts': post._id } }, { new: true });
         res.json(post);
