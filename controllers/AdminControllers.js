@@ -28,6 +28,18 @@ module.exports.addUserAdmin = async (req, res) => {
 
 };
 
+module.exports.authAdmin = async (req, res) => {
+    const { email, password } = req.body;
+    try {
+        // If there are no validation errors, create the admin object
+        // const admin = await Admin.create({ first_name, last_name, email, password });
+        res.status(201).json(admin);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
 module.exports.getUsers = async (req, res) => {
     try {
         const users = await User

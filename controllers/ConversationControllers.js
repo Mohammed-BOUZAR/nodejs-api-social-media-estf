@@ -31,11 +31,17 @@ module.exports.setConversation = async (req, res) => {
     try {
         const { userId } = req.body;
         let participant = [req.userId, userId];
-        const conversation = await Conversation({
-            participant
-        });
-        await conversation.save();
-        res.json(conversation);
+        let conversation = await Conversation.findOne({
+            'participant._id': { $in: [userId, req.userId] }
+        }).populate('participant messages.sender');
+        if (conversation) return res.status(200).json(conversation);
+        else {
+            conversation = await Conversation({
+                participant
+            });
+            await conversation.save().populate('participant');
+            res.json(conversation);
+        }
     } catch (error) {
         console.error(error.message);
         res.status(500).send('Server Error');

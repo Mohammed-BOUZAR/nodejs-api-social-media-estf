@@ -20,11 +20,11 @@ const postSchema = new mongoose.Schema({
     type: Date,
     default: Date.now()
   },
-  state: {
-    type: String,
-    required: [true, "Enter a valid state"],
-    enum: ['actif', 'en attente', 'inactif']
-  },
+  // state: {
+  //   type: String,
+  //   required: [true, "Enter a valid state"],
+  //   enum: ['actif', 'en attente', 'inactif']
+  // },
   reactions: [reactionSchema],
   comments: [commentSchema]
 }, { strictPopulate: false });
@@ -68,10 +68,10 @@ postSchema
     content: Joi.string().min(2).max(50).trim().messages({
       'string.max': 'First name should be at most 500 characters long'
     }),
-    state: Joi.string().required().valid('actif', 'en attente', 'inactif').messages({
-      'any.required': 'Enter a valid state',
-      'any.only': "State must be 'actif', 'en attente', or 'inactif'"
-    })
+    // state: Joi.string().required().valid('actif', 'en attente', 'inactif').messages({
+    //   'any.required': 'Enter a valid state',
+    //   'any.only': "State must be 'actif', 'en attente', or 'inactif'"
+    // })
   });
   
   // Validate user object using Joi

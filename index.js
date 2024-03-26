@@ -14,9 +14,6 @@ mongoose.connect(process.env.CONNECT)
 
 const app = express();
 
-
-const jwt = require('jsonwebtoken');
-
 const auth = require('./routes/auth');
 const admin = require('./routes/admin');
 const users = require('./routes/users');
@@ -30,6 +27,16 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(cors());
 app.use(express.static('public'));
+
+// Set the 'Access-Control-Allow-Origin' header to allow requests from http://localhost:8100
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  // Set other CORS headers as needed
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  next();
+});
 
 app.use("/api/auth", auth);
 app.use("/api/admin", admin);

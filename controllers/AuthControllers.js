@@ -6,7 +6,7 @@ module.exports.authRegister = async (req, res) => {
     let { first_name, last_name, email, date_birth, state, profile, cin, cne, password } = req.body;
     console.log(req.body);
     try {
-        const result = validateUser({ first_name, last_name, email, date_birth, state, profile, cin, cne, password });
+        const result = validateUser({ first_name, last_name, email, date_birth, cin, cne, password });
         if (result.error) {
             // If there are validation errors, send an error response
             res.status(400).json({ error: result.error.details.map((d) => d.message) });
@@ -17,7 +17,7 @@ module.exports.authRegister = async (req, res) => {
                 $or: [{ email }, { cin }, { cne }] // Use $or operator to search for any of the fields
             });
             if (user) return res.status(400).json({ message: 'Already exist!' });
-            user = await User.create({ first_name, last_name, email, date_birth, state, profile, cin, cne, password });
+            user = await User.create({ first_name, last_name, email, date_birth, state: "en attente", profile, cin, cne, password });
             ({ first_name, last_name, email, date_birth, state, profile, cin, cne } = user);
             res.status(201).json({ first_name, last_name, email, date_birth, state, profile, cin, cne });
         }

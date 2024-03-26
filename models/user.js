@@ -110,44 +110,44 @@ userSchema.post('save', function (error, doc, next) {
 
 const userJoiSchema = Joi.object({
   first_name: Joi.string().required().min(2).max(50).trim().messages({
-    'any.required': 'Enter a valid first name',
+    // 'any.required': 'Enter a valid first name',
     'string.empty': 'First name is required',
     'string.min': 'First name should be at least 2 characters long',
     'string.max': 'First name should be at most 50 characters long'
   }),
   last_name: Joi.string().required().min(2).max(50).trim().messages({
-    'any.required': 'Enter a valid last name',
+    // 'any.required': 'Enter a valid last name',
     'string.empty': 'Last name is required',
     'string.min': 'Last name should be at least 2 characters long',
     'string.max': 'Last name should be at most 50 characters long'
   }),
   date_birth: Joi.date().required().messages({
-    'any.required': 'Enter a valid date of birth'
+    'any.required': 'Date of birth is required'
   }),
   email: Joi.string().required().email().trim().lowercase().messages({
-    'any.required': 'Enter a valid email',
+    // 'any.required': 'Enter a valid email',
     'string.empty': 'Email is required',
     'string.email': 'Please enter a valid email'
   }),
   password: Joi.string().required().min(5).max(100).trim().messages({
-    'any.required': 'Password is required',
+    // 'any.required': 'Password is required',
     'string.empty': 'Password is required',
     'string.min': 'Password should be at least 5 characters long',
     'string.max': 'Password should be at most 100 characters long'
   }),
-  state: Joi.string().required().valid('actif', 'en attente', 'inactif').messages({
-    'any.required': 'Enter a valid state',
-    'any.only': "State must be 'actif', 'en attente', or 'inactif'"
-  }),
+  // state: Joi.string().required().valid('actif', 'en attente', 'inactif').messages({
+  //   'any.required': 'Enter a valid state',
+  //   'any.only': "State must be 'actif', 'en attente', or 'inactif'"
+  // }),
   cin: Joi.string().required().messages({
-    'any.required': 'Enter a valid CIN',
+    // 'any.required': 'Enter a valid CIN',
     'string.empty': 'CIN is required'
   }),
   cne: Joi.string().required().messages({
-    'any.required': 'Enter a valid CNE',
+    // 'any.required': 'Enter a valid CNE',
     'string.empty': 'CNE is required'
   }),
-  profile: Joi.string()
+  // profile: Joi.string()
   // departement: Joi.string().required().messages({
   //   'any.required': 'Enter a valid Departement',
   //   'string.empty': 'Departement is required'

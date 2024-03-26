@@ -30,18 +30,11 @@ module.exports.getUser = async (req, res) => {
                     res.status(404).send({ message: 'User not found' });
                 } else {
                     console.log(user);
-                    res.send({ user });
+                    res.json(user);
                 }
             })
                 .select('first_name last_name email date_birth profile')
-                .populate('posts', (err, populatedUser) => {
-                    if (err) {
-                        console.error(err);
-                        return res.status(500).send({ message: 'Error populating posts' });
-                    }
-                    // Send the response with the populated 'posts' field
-                    res.status(200).json(populatedUser);
-                });;
+                .populate('posts'); // Populate the 'posts' field;
         } else {
             User.findOne({ _id: { $eq: currentUser } }, (err, user) => {
                 if (err) {
@@ -59,7 +52,6 @@ module.exports.getUser = async (req, res) => {
                         // Send the response with the populated 'posts' field
                         res.status(200).json(populatedUser);
                     });
-                    // res.send({ user });
                 }
             });
         }
@@ -67,6 +59,7 @@ module.exports.getUser = async (req, res) => {
         console.log(err);
         res.status(401).send({ message: 'Authentication failed' });
     }
+
 };
 
 module.exports.putUser = async (req, res) => {
